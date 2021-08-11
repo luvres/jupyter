@@ -1,0 +1,48 @@
+kubectl apply -k ./jupyter-rocm
+kubectl delete ns jupyter-notebook
+
+https://jupyter.iazone.eu.org/
+
+!rocm-smi
+
+pip list
+pip install --upgrade pip
+
+pip install tensorflow-rocm==2.1.1 # rocm3.1-tf2.1.1 | rocm3.3-tf2.1.1
+pip install tensorflow-rocm==2.1.6 # rocm3.5-tf2.1 
+pip install tensorflow-rocm==2.2.0 # rocm3.5-tf2.2
+pip install tensorflow-rocm==2.3.3 # rocm3.7-tf2.3.3
+# -----------
+
+python3
+ipython
+
+import tensorflow as tf
+tf.__version__
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
+
+docker run --rm --device=/dev/kfd --device=/dev/dri -ti izone/jupyter:rocm3.1-tf2.1.1-python37 bash
+docker run --rm --device=/dev/kfd --device=/dev/dri -ti izone/jupyter:rocm3.5-tf2.2.0-python37 bash
+docker run --rm --device=/dev/kfd --device=/dev/dri -ti izone/jupyter:rocm3.7-tf2.3.3-python37 bash
+
+
+docker run --rm \
+--device=/dev/kfd --device=/dev/dri \
+--ipc=host --group-add video --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+-ti rocm/tensorflow:rocm3.5-tf2.2-dev bash
+
+--shm-size 16G 
+ -v $HOME/dockerx:/dockerx'
+
+# -----------
+RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER 
+
+RUN useradd --create-home -G sudo,video --shell /bin/bash rocm-user
+
+useradd -m -s /bin/bash -G sudo,video -N -u $NB_UID $NB_USER
+
+sudo usermod -aG docker $USER
+# -----------
+
+
