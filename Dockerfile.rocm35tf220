@@ -1,24 +1,23 @@
 # This Dockerfile provides a starting point for a ROCm installation of
 # MIOpen and tensorflow.
-
 #FROM ubuntu:bionic
-#FROM jupyter/scipy-notebook:ubuntu-18.04
-#FROM jupyter/scipy-notebook:ubuntu-20.04
-#FROM jupyter/scipy-notebook:python-3.8.8
-FROM izone/jupyter:rocm3.5-tf2.2.0-python37
+#MAINTAINER Jeff Poznanovic <jeffrey.poznanovic@amd.com>
 
-MAINTAINER Jeff Poznanovic <jeffrey.poznanovic@amd.com>
+FROM jupyter/scipy-notebook:ubuntu-18.04
+#FROM jupyter/base-notebook:ubuntu-18.04
+MAINTAINER Leonardo Loures <luvres@hotmail.com>
 
 USER root
 
+ARG ROCM_VERSION=3.5.0
 ARG ROCM_DEB_REPO=http://repo.radeon.com/rocm/apt/3.5/
 ARG ROCM_BUILD_NAME=xenial
 ARG ROCM_BUILD_NUM=main
-ARG ROCM_PATH=/opt/rocm-3.5.0
+ARG ROCM_PATH=/opt/rocm-${ROCM_VERSION}
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TF_NEED_ROCM 1
-ENV HOME /root/
+#ENV HOME /root/
 RUN apt-get --allow-unauthenticated update && apt install -y wget software-properties-common
 
 # Add rocm repository
@@ -31,44 +30,45 @@ RUN /bin/bash -c 'if [[ $ROCM_DEB_REPO == http://repo.radeon.com/rocm/*  ]] ; th
     fi'
 
 # Install misc pkgs
-RUN apt-get update --allow-insecure-repositories && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  build-essential \
-  bsdmainutils \
-  clang-6.0 \
-  clang-format-6.0 \
-  clang-tidy-6.0 \
-  cmake \
-  cmake-qt-gui \
-  ssh \
-  curl \
-  apt-utils \
-  pkg-config \
-  g++-multilib \
-  git \
-  kmod \
-  libunwind-dev \
-  libfftw3-dev \
-  libelf-dev \
-  libncurses5-dev \
-  libpthread-stubs0-dev \
-  vim \
-  gfortran \
-  libboost-program-options-dev \
-  libssl-dev \
-  libboost-dev \
-  libboost-system-dev \
-  libboost-filesystem-dev \
-  rpm \
-  libnuma-dev \
-  pciutils \
-#  virtualenv \
-#  python-pip \
-#  python3-pip \
-  libxml2 \
-  libxml2-dev \
-  wget && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
+RUN apt-get update --allow-insecure-repositories && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    build-essential \
+    bsdmainutils \
+    clang-6.0 \
+    clang-format-6.0 \
+    clang-tidy-6.0 \
+    cmake \
+    cmake-qt-gui \
+    ssh \
+    curl \
+    apt-utils \
+    pkg-config \
+    g++-multilib \
+    git \
+    kmod \
+    libunwind-dev \
+    libfftw3-dev \
+    libelf-dev \
+    libncurses5-dev \
+    libpthread-stubs0-dev \
+    vim \
+    gfortran \
+    libboost-program-options-dev \
+    libssl-dev \
+    libboost-dev \
+    libboost-system-dev \
+    libboost-filesystem-dev \
+    rpm \
+    libnuma-dev \
+    pciutils \
+#    virtualenv \
+#    python-pip \
+#    python3-pip \
+    libxml2 \
+    libxml2-dev \
+    wget && \
+  \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install rocm pkgs
 RUN apt-get update --allow-insecure-repositories && \
@@ -78,8 +78,7 @@ RUN apt-get update --allow-insecure-repositories && \
   \
     rocm-dev rocm-libs rccl && \
   \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set up paths
 ENV HCC_HOME=$ROCM_PATH/hcc
@@ -129,4 +128,5 @@ ENV TF_NEED_ROCM 1
 # it seems that we need to up the threshold slightly to 320MB
 ENV HIP_HIDDEN_FREE_MEM=320
 
+# Switch back to jovyan to avoid accidental container runs as root
 USER $NB_UID

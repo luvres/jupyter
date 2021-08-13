@@ -17,69 +17,85 @@
 set -e
 
 # Get the latest version of pip so it recognize manylinux2010
-wget https://bootstrap.pypa.io/get-pip.py
-python3.6 get-pip.py
-rm -f get-pip.py
+#wget https://bootstrap.pypa.io/get-pip.py
+##python3.6 get-pip.py
+#python get-pip.py
+#rm -f get-pip.py
 
 # Install pip packages from whl files to avoid the time-consuming process of
 # building from source.
 
 # Pin wheel==0.31.1 to work around issue
 # https://github.com/pypa/auditwheel/issues/102
-pip3 install wheel==0.31.1
+#pip3 install wheel==0.31.1
+#pip3 install wheel
 
 # Install last working version of setuptools. This must happen before we install
 # absl-py, which uses install_requires notation introduced in setuptools 20.5.
-pip3 install --upgrade setuptools==39.1.0
+#pip3 install --upgrade setuptools==39.1.0
+#pip3 install --upgrade setuptools
 
 pip3 install virtualenv
 
 # Install six and future.
-pip3 install --upgrade six==1.12.0
-pip3 install "future>=0.17.1"
+#pip3 install --upgrade six==1.12.0
+#pip3 install --upgrade six
+
+#pip3 install "future>=0.17.1"
+pip3 install future
 
 # Install absl-py.
 pip3 install --upgrade absl-py
 
 # Install werkzeug.
-pip3 install --upgrade werkzeug==0.11.10
+#pip3 install --upgrade werkzeug==0.11.10
+pip3 install --upgrade werkzeug
 
 # Install bleach. html5lib will be picked up as a dependency.
-pip3 install --upgrade bleach==2.0.0
+#pip3 install --upgrade bleach==2.0.0
+#pip3 install --upgrade bleach
 
 # Install markdown.
-pip3 install --upgrade markdown==2.6.8
+#pip3 install --upgrade markdown==2.6.8
+pip3 install --upgrade markdown
 
 # Install protobuf.
-pip3 install --upgrade protobuf==3.16.0
+#pip3 install --upgrade protobuf==3.16.0
+pip3 install --upgrade protobuf
 
 # Remove obsolete version of six, which can sometimes confuse virtualenv.
-rm -rf /usr/lib/python3/dist-packages/six*
+#rm -rf /usr/lib/python3/dist-packages/six*
 
 # numpy needs to be installed from source to fix segfaults. See:
 # https://github.com/tensorflow/tensorflow/issues/6968
 # This workaround isn't needed for Ubuntu 16.04 or later.
-if $(cat /etc/*-release | grep -q 14.04); then
-  pip3 install --upgrade numpy==1.14.5
-else
-  pip3 install --upgrade numpy~=1.19.2
-fi
+#if $(cat /etc/*-release | grep -q 14.04); then
+#  pip3 install --upgrade numpy==1.14.5
+#else
+#  pip3 install --upgrade numpy~=1.19.2
+#fi
 
-pip3 install scipy==1.4.1
+pip3 install --upgrade numpy
 
-pip3 install scikit-learn==0.18.1
+#pip3 install scipy==1.4.1
+#pip3 install scipy
+
+#pip3 install scikit-learn==0.18.1
+#pip3 install scikit-learn
 
 # pandas required by `inflow`
-pip3 install pandas==0.19.2
+#pip3 install pandas==0.19.2
+#pip3 install pandas
 
 # Benchmark tests require the following:
-pip3 install psutil
+#pip3 install psutil
 pip3 install py-cpuinfo
 
 # pylint tests require the following version. pylint==1.6.4 hangs erratically,
 # thus using the updated version of 2.5.3 only for python3 as python2 is EOL
 # and this version is not available.
-pip3 install pylint==2.7.4
+#pip3 install pylint==2.7.4
+pip3 install pylint
 
 # pycodestyle tests require the following:
 pip3 install pycodestyle
@@ -96,8 +112,10 @@ pip3 install --upgrade termcolor
 
 # Keras
 pip3 install keras-nightly --no-deps
-pip3 install keras_preprocessing==1.1.0 --no-deps
-pip3 install --upgrade h5py==3.1.0
+#pip3 install keras_preprocessing==1.1.0 --no-deps
+pip3 install keras_preprocessing --no-deps
+#pip3 install --upgrade h5py==3.1.0
+#pip3 install --upgrade h5py
 
 # Estimator
 pip3 install tf-estimator-nightly --no-deps
@@ -113,5 +131,20 @@ pip3 install dm-tree
 
 # tf.distribute multi worker tests require the following:
 # Those tests are Python3 only.
-pip3 install --upgrade dill
-pip3 install --upgrade tblib
+#pip3 install --upgrade dill
+#pip3 install --upgrade tblib
+
+# TensorFlow-ROCm
+if [[ "$ROCM_VERSION" == "3.1.0" ]]; then
+  pip install tensorflow-rocm==2.1.1
+fi
+
+if [[ "$ROCM_VERSION" == "3.5.0" ]]; then
+  pip install tensorflow-rocm==2.2.0
+fi
+
+if [[ "$ROCM_VERSION" == "3.7.0" ]]; then
+  pip install tensorflow-rocm==2.3.3
+fi
+
+

@@ -1,20 +1,23 @@
 # This Dockerfile provides a starting point for a ROCm installation of
 # MIOpen and tensorflow.
+#FROM ubuntu:bionic
+#MAINTAINER Jeff Poznanovic <jeffrey.poznanovic@amd.com>
 
-FROM izone/jupyter:base-notebook-python37
-
+FROM jupyter/scipy-notebook:ubuntu-18.04
+#FROM jupyter/base-notebook:ubuntu-18.04
 MAINTAINER Leonardo Loures <luvres@hotmail.com>
 
 USER root
 
+ARG ROCM_VERSION=3.7.0
 ARG ROCM_DEB_REPO=http://repo.radeon.com/rocm/apt/3.7/
 ARG ROCM_BUILD_NAME=xenial
 ARG ROCM_BUILD_NUM=main
-ARG ROCM_PATH=/opt/rocm-3.7.0
+ARG ROCM_PATH=/opt/rocm-${ROCM_VERSION}
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TF_NEED_ROCM 1
-ENV HOME /root/
+#ENV HOME /root/
 RUN apt-get --allow-unauthenticated update && apt install -y wget software-properties-common
 
 # Add rocm repository
@@ -27,44 +30,45 @@ RUN /bin/bash -c 'if [[ $ROCM_DEB_REPO == http://repo.radeon.com/rocm/*  ]] ; th
     fi'
 
 # Install misc pkgs
-RUN apt-get update --allow-insecure-repositories && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  build-essential \
-  bsdmainutils \
-  clang-6.0 \
-  clang-format-6.0 \
-  clang-tidy-6.0 \
-  cmake \
-  cmake-qt-gui \
-  ssh \
-  curl \
-  apt-utils \
-  pkg-config \
-  g++-multilib \
-  git \
-  kmod \
-  libunwind-dev \
-  libfftw3-dev \
-  libelf-dev \
-  libncurses5-dev \
-  libpthread-stubs0-dev \
-  vim \
-  gfortran \
-  libboost-program-options-dev \
-  libssl-dev \
-  libboost-dev \
-  libboost-system-dev \
-  libboost-filesystem-dev \
-  rpm \
-  libnuma-dev \
-  pciutils \
-#  virtualenv \
-#  python-pip \
-#  python3-pip \
-  libxml2 \
-  libxml2-dev \
-  wget && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
+RUN apt-get update --allow-insecure-repositories && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    build-essential \
+    bsdmainutils \
+    clang-6.0 \
+    clang-format-6.0 \
+    clang-tidy-6.0 \
+    cmake \
+    cmake-qt-gui \
+    ssh \
+    curl \
+    apt-utils \
+    pkg-config \
+    g++-multilib \
+    git \
+    kmod \
+    libunwind-dev \
+    libfftw3-dev \
+    libelf-dev \
+    libncurses5-dev \
+    libpthread-stubs0-dev \
+    vim \
+    gfortran \
+    libboost-program-options-dev \
+    libssl-dev \
+    libboost-dev \
+    libboost-system-dev \
+    libboost-filesystem-dev \
+    rpm \
+    libnuma-dev \
+    pciutils \
+#    virtualenv \
+#    python-pip \
+#    python3-pip \
+    libxml2 \
+    libxml2-dev \
+    wget && \
+  \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install rocm pkgs
 RUN apt-get update --allow-insecure-repositories && \
@@ -86,21 +90,29 @@ ENV PATH="$OPENCL_ROOT/bin:${PATH}"
 
 # Add target file to help determine which device(s) to build for
 RUN bash -c 'echo -e "gfx900\ngfx906\ngfx908" >> ${ROCM_PATH}/bin/target.lst'
+#RUN bash -c 'echo -e "gfx803\ngfx900\ngfx906" >> ${ROCM_PATH}/bin/target.lst'
 
+# Need to explicitly create the $ROCM_PATH/.info/version file to workaround what seems to be a bazel bug
+# The env vars being set via --action_env in .bazelrc and .tf_configure.bazelrc files are sometimes
+# not getting set in the build command being spawned by bazel (in theory this should not happen)
+# As a consequence ROCM_PATH is sometimes not set for the hipcc commands.
+# When hipcc incokes hcc, it specifies $ROCM_PATH/.../include dirs via the `-isystem` options
+# If ROCM_PATH is not set, it defaults to /opt/rocm, and as a consequence a dependency is generated on the
+# header files included within `/opt/rocm`, which then leads to bazel dependency errors
+# Explicitly creating the $ROCM_PATH/.info/version allows ROCM path to be set correrctly, even when ROCM_PATH
+# is not explicitly set, and thus avoids the eventual bazel dependency error.
+# The bazel bug needs to be root-caused and addressed, but that is out of our control and may take a long time
+# to come to fruition, so implementing the workaround to make do till then
+# Filed https://github.com/bazelbuild/bazel/issues/11163 for tracking this
 RUN touch ${ROCM_PATH}/.info/version
 
 # Copy and run the install scripts.
 COPY install/*.sh /install/
 ARG DEBIAN_FRONTEND=noninteractive
 
-#RUN /install/install_bootstrap_deb_packages.sh
-#RUN /install/install_deb_packages.sh
-#RUN /install/install_pip_packages.sh
-
-# ffmpeg for matplotlib anim & dvipng+cm-super for latex labels
-RUN apt-get update --yes && \
-    apt-get install --yes --no-install-recommends ffmpeg dvipng cm-super && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN /install/install_bootstrap_deb_packages.sh
+RUN /install/install_deb_packages.sh
+RUN /install/install_pip_packages.sh
 
 RUN /install/install_bazel.sh
 RUN /install/install_golang.sh
@@ -116,81 +128,5 @@ ENV TF_NEED_ROCM 1
 # it seems that we need to up the threshold slightly to 320MB
 ENV HIP_HIDDEN_FREE_MEM=320
 
-USER ${NB_UID}
-
-# Install Python 3 packages
-RUN conda install --quiet --yes \
-    'altair' \
-    'beautifulsoup4' \
-    'bokeh' \
-    'bottleneck' \
-    'cloudpickle' \
-    'conda-forge::blas=*=openblas' \
-    'cython' \
-    'dask' \
-    'dill' \
-    'h5py' \
-    'ipympl'\
-    'ipywidgets' \
-    'matplotlib-base' \
-    'numba' \
-    'numexpr' \
-    'pandas' \
-    'patsy' \
-    'protobuf' \
-    'pytables' \
-    'scikit-image' \
-    'scikit-learn' \
-    'scipy' \
-    'seaborn' \
-    'sqlalchemy' \
-    'statsmodels' \
-    'sympy' \
-    'widgetsnbextension'\
-    'xlrd' \
-    # install_pip_packages.sh in rocm
-    'absl-py' \
-    'werkzeug' \
-    'markdown' \
-    'py-cpuinfo' \
-    'pylint' \
-    'pycodestyle' \
-    'grpcio' \
-    'astor' \
-    'gast' \
-    'termcolor' \
-#    'keras-nightly' \
-#    'keras_preprocessing' \
-#    'tf-estimator-nightly ' \
-#    'tb-nightly ' \
-    'argparse' \
-    'dm-tree' && \
-    conda clean --all -f -y && \
-    fix-permissions "${CONDA_DIR}" && \
-    fix-permissions "/home/${NB_USER}"
-
-# Install facets which does not have a pip or conda package at the moment
-WORKDIR /tmp
-RUN git clone https://github.com/PAIR-code/facets.git && \
-    jupyter nbextension install facets/facets-dist/ --sys-prefix && \
-    rm -rf /tmp/facets && \
-    fix-permissions "${CONDA_DIR}" && \
-    fix-permissions "/home/${NB_USER}"
-
-# Import matplotlib the first time to build the font cache.
-ENV XDG_CACHE_HOME="/home/${NB_USER}/.cache/"
-
-RUN MPLBACKEND=Agg python -c "import matplotlib.pyplot" && \
-    fix-permissions "/home/${NB_USER}"
-
-#USER ${NB_UID}
-
-# Install Tensorflow
-ARG TF_ROCM_VERSION="2.3.3"
-RUN mamba install --quiet --yes \
-    'tensorflow-rocm==${TF_ROCM_VERSION}' && \
-    mamba clean --all -f -y && \
-    fix-permissions "${CONDA_DIR}" && \
-    fix-permissions "/home/${NB_USER}"
-
-WORKDIR "${HOME}"
+# Switch back to jovyan to avoid accidental container runs as root
+USER $NB_UID

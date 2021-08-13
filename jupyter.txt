@@ -9,9 +9,10 @@ pip list
 pip install --upgrade pip
 
 pip install tensorflow-rocm==2.1.1 # rocm3.1-tf2.1.1 | rocm3.3-tf2.1.1
-pip install tensorflow-rocm==2.1.6 # rocm3.5-tf2.1 
-pip install tensorflow-rocm==2.2.0 # rocm3.5-tf2.2
-pip install tensorflow-rocm==2.3.3 # rocm3.7-tf2.3.3
+pip install tensorflow-rocm==2.1.6 # rocm3.5-tf2.1.6 
+pip install tensorflow-rocm==2.2.0 # rocm3.5-tf2.2.0
+pip install tensorflow-rocm==2.3.3 # rocm3.7-tf2.3.3 -- 2.3.7
+pip install tensorflow-rocm==2.4.0 #  -- 2.4.3
 # -----------
 
 python3
@@ -21,6 +22,8 @@ import tensorflow as tf
 tf.__version__
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
+docker exec -u root -ti ROCm bash -c "chown root:users /dev/kfd"
+docker exec -u root -ti ROCm bash -c "chown root:users /dev/dri/renderD128"
 
 docker run --rm --device=/dev/kfd --device=/dev/dri -ti izone/jupyter:rocm3.1-tf2.1.1-python37 bash
 docker run --rm --device=/dev/kfd --device=/dev/dri -ti izone/jupyter:rocm3.5-tf2.2.0-python37 bash
