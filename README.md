@@ -1,4 +1,4 @@
-## Tensorflow ROCm for Jupyterhub 
+## Tensorflow ROCm and NVIDIA for Jupyterhub 
 -----
 
 #### Pull image
