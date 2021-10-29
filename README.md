@@ -5,13 +5,41 @@
 ```
 docker pull izone/jupyter:rocm3.5-tf2.2.0-python37
 ```
-#### Run
+
+-----
+## Running
+
+#### ROCm
 ```
 docker run --rm --name Jupyter-rocm \
 --device=/dev/kfd \
 --device=/dev/dri \
 -ti izone/jupyter:rocm3.5-tf2.2.0-python37
 ```
+#### NVIDIA
+```
+docker run --gpus all -it --rm izone/jupyter:nvidia-tensorflow \
+python -c "import tensorflow as tf; print('Num GPUs Available: ', len(tf.config.list_physical_devices('GPU')))"
+```
+```
+docker run --gpus all -it --rm izone/jupyter:nvidia-tensorflow \
+python -c "import tensorflow as tf; print(tf.reduce_sum(tf.random.normal([1000, 1000])))"
+```
+```
+docker run --rm --gpus all --name TensorFlow \
+-p 8888:8888 \
+-v $HOME/notebooks:/root/notebooks \
+-u root \
+-ti izone/jupyter:nvidia-tensorflow \
+jupyter notebook \
+	--allow-root \
+	--no-browser \
+	--ip=0.0.0.0 \
+	--port=8888 \
+	--notebook-dir=/root/notebooks \
+	--NotebookApp.token=''
+```
+
 -----
 ## Builds
 
