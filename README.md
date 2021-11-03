@@ -56,5 +56,7 @@ docker build -t izone/jupyter:rocm3.7-tf2.3.3-python37 -f ./Dockerfile.rocm37tf2
 
 #### NVIDIA
 ```
-docker build -t izone/jupyter:cuda11.2-tf2.6.0-python39 -f ./Dockerfile.cuda112tf260 . 
+docker build -t izone/jupyter:cuda11.2-tf2.6-python39 -f ./Dockerfile.cuda112tf260 .
+
+docker build -t izone/jupyter:cuda11.2-tf2.6-python39-29102021 -f ./Dockerfile.cuda112tf260 .
 ```
